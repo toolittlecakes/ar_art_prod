@@ -1,0 +1,19 @@
+:8085 {
+	root * .
+
+	# Serve index.html at root
+	handle / {
+		rewrite * /index.html
+		file_server
+	}
+
+	# Serve assets folder
+	handle /assets/* {
+		file_server browse
+	}
+
+	# Block everything else
+	handle {
+		respond 404
+	}
+}
