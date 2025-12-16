@@ -7,13 +7,29 @@
   <title>AR Fox Model with Marker</title>
   <meta name="description" content="Simple AR application displaying a low poly fox 3D model over a Hiro marker">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@300;400&display=swap"
+    rel="stylesheet">
+
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
+    :root {
+      --bg-deep: #0a0a0f;
+      --bg-card: #12121a;
+      --text-primary: #e8e6e3;
+      --text-secondary: #9a9590;
+      --accent: #c9a961;
+      --accent-glow: rgba(201, 169, 97, 0.3);
+      --border: rgba(201, 169, 97, 0.15);
+    }
+
     body {
       margin: 0;
       overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Cormorant Garamond', Georgia, serif;
     }
 
     /* Loading overlay */
@@ -23,7 +39,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.85);
+      background: var(--bg-deep);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -39,22 +55,23 @@
 
     .loading-content {
       text-align: center;
-      color: white;
+      color: var(--text-primary);
     }
 
     .loading-title {
-      font-size: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
       font-weight: 300;
-      margin-bottom: 30px;
-      letter-spacing: 2px;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
+      color: var(--text-secondary);
     }
 
     .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 3px solid rgba(255, 255, 255, 0.1);
-      border-top-color: #00d4ff;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 25px;
@@ -72,18 +89,20 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 50%, #f0932b 100%);
-      color: white;
+      background: var(--bg-card);
+      border-top: 1px solid var(--accent);
+      color: var(--accent);
       text-align: center;
       padding: 20px 30px;
-      font-size: 1.4rem;
-      font-weight: 600;
-      letter-spacing: 3px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 400;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
       z-index: 1000;
       transform: translateY(100%);
       transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
       cursor: pointer;
       user-select: none;
     }
@@ -93,31 +112,31 @@
     }
 
     #catch-banner::before {
-      content: '👆';
+      content: '↑';
       margin-right: 12px;
-      font-size: 1.2rem;
+      font-size: 1rem;
     }
 
     #catch-banner::after {
-      content: '👆';
+      content: '↑';
       margin-left: 12px;
-      font-size: 1.2rem;
+      font-size: 1rem;
     }
 
     /* Пульсация когда активна */
     #catch-banner.visible {
-      animation: pulse-banner 1.5s ease-in-out infinite;
+      animation: pulse-banner 2s ease-in-out infinite;
     }
 
     @keyframes pulse-banner {
 
       0%,
       100% {
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
       }
 
       50% {
-        box-shadow: 0 -4px 30px rgba(255, 107, 107, 0.6);
+        box-shadow: 0 -4px 30px var(--accent-glow);
       }
     }
 
@@ -127,42 +146,44 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      background: var(--bg-card);
+      border-top: 1px solid var(--accent);
+      color: var(--accent);
       text-align: center;
       padding: 22px 30px;
-      font-size: 1.4rem;
-      font-weight: 600;
-      letter-spacing: 3px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 400;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
       z-index: 1000;
       transform: translateY(100%);
       transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      box-shadow: 0 -4px 20px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
       cursor: pointer;
       user-select: none;
     }
 
     #start-banner.visible {
       transform: translateY(0);
-      animation: pulse-start 1.5s ease-in-out infinite;
+      animation: pulse-start 2s ease-in-out infinite;
     }
 
     #start-banner::before {
-      content: '▶️';
+      content: '▶';
       margin-right: 12px;
-      font-size: 1.2rem;
+      font-size: 0.8rem;
     }
 
     @keyframes pulse-start {
 
       0%,
       100% {
-        box-shadow: 0 -4px 20px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
       }
 
       50% {
-        box-shadow: 0 -4px 35px rgba(102, 126, 234, 0.7);
+        box-shadow: 0 -4px 35px var(--accent-glow);
       }
     }
 
@@ -173,13 +194,13 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      background: var(--bg-deep);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 10000;
-      transition: opacity 0.5s ease-out;
+      transition: opacity 0.8s ease;
       padding: 30px;
       box-sizing: border-box;
     }
@@ -191,42 +212,37 @@
 
     .onboarding-content {
       text-align: center;
-      color: white;
+      color: var(--text-primary);
       max-width: 400px;
     }
 
     .onboarding-icon {
-      font-size: 4rem;
-      margin-bottom: 25px;
-      animation: float 3s ease-in-out infinite;
+      font-size: 3rem;
+      margin-bottom: 2rem;
+      color: var(--accent);
+      animation: pulse 3s ease-in-out infinite;
     }
 
-    @keyframes float {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-10px);
-      }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
     }
 
     .onboarding-title {
-      font-size: 1.6rem;
-      font-weight: 600;
-      margin-bottom: 20px;
-      letter-spacing: 1px;
-      line-height: 1.4;
+      font-size: 1.8rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.05em;
+      line-height: 1.5;
+      color: var(--text-primary);
     }
 
     .onboarding-description {
-      font-size: 1.1rem;
-      font-weight: 300;
-      margin-bottom: 35px;
-      line-height: 1.6;
-      opacity: 0.9;
+      font-size: 1.15rem;
+      font-weight: 400;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
     }
 
     .onboarding-tip {
@@ -234,44 +250,58 @@
       align-items: center;
       justify-content: center;
       gap: 12px;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 15px 25px;
-      border-radius: 12px;
-      margin-bottom: 40px;
-      backdrop-filter: blur(10px);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      margin-bottom: 2.5rem;
     }
 
     .onboarding-tip-icon {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
     }
 
     .onboarding-tip-text {
-      font-size: 1rem;
-      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
     }
 
     .onboarding-btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 18px 50px;
-      font-size: 1.2rem;
-      font-weight: 600;
-      border-radius: 50px;
-      cursor: pointer;
-      letter-spacing: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 300;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 1rem 2.5rem;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
     }
 
-    .onboarding-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+    .onboarding-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
     }
 
+    .onboarding-btn:hover::before,
+    .onboarding-btn:active::before {
+      transform: translateX(100%);
+    }
+
+    .onboarding-btn:hover,
     .onboarding-btn:active {
-      transform: translateY(-1px);
+      color: var(--accent);
+      border-color: var(--accent);
     }
 
     /* Финальный экран */
@@ -281,15 +311,16 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #2d2d2d 100%);
+      background: var(--bg-deep);
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      gap: 3rem;
       z-index: 10001;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.8s ease-in;
+      transition: opacity 0.8s ease;
       padding: 60px 30px;
       box-sizing: border-box;
     }
@@ -300,12 +331,13 @@
     }
 
     .final-question {
-      color: white;
-      font-size: 1.5rem;
-      font-weight: 300;
+      font-size: 1.8rem;
+      font-weight: 500;
+      font-style: italic;
+      color: var(--accent);
       text-align: center;
-      letter-spacing: 2px;
-      margin-top: 40px;
+      letter-spacing: 0.05em;
+      line-height: 1.6;
       opacity: 0;
       transform: translateY(-20px);
       transition: opacity 0.6s ease, transform 0.6s ease;
@@ -320,25 +352,50 @@
     .final-buttons {
       display: flex;
       flex-direction: column;
-      gap: 25px;
+      gap: 1rem;
       width: 100%;
       max-width: 320px;
     }
 
     .final-btn {
-      background: transparent;
-      color: white;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      padding: 22px 40px;
-      font-size: 1.2rem;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.1rem;
       font-weight: 500;
-      border-radius: 60px;
+      text-align: center;
+      color: var(--text-primary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 1.25rem 2rem;
       cursor: pointer;
-      letter-spacing: 2px;
-      text-transform: uppercase;
       transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
       opacity: 0;
       transform: translateY(30px);
+    }
+
+    .final-btn::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--accent);
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+
+    .final-btn:hover::before,
+    .final-btn:active::before {
+      transform: scaleY(1);
+    }
+
+    .final-btn:hover,
+    .final-btn:active {
+      border-color: var(--accent);
+      background: rgba(201, 169, 97, 0.05);
+      padding-left: 2.25rem;
     }
 
     .final-btn:nth-child(1) {
@@ -354,17 +411,6 @@
       transform: translateY(0);
     }
 
-    .final-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.6);
-      transform: scale(1.02);
-    }
-
-    .final-btn:active {
-      transform: scale(0.98);
-      background: rgba(255, 255, 255, 0.2);
-    }
-
     /* Скрытие AR сцены */
     .ar-hidden {
       display: none !important;
@@ -377,16 +423,13 @@
   <!-- Онбординг экран -->
   <div id="onboarding-overlay">
     <div class="onboarding-content">
-      <div class="onboarding-icon">🎭</div>
+      <div class="onboarding-icon">◈</div>
       <div class="onboarding-title">Интерактивный<br>аудио-визуальный опыт</div>
-      <div class="onboarding-description">
-        Вас ждёт погружение в мир AR-искусства со звуком и визуальными эффектами
-      </div>
       <div class="onboarding-tip">
-        <span class="onboarding-tip-icon">🎧</span>
-        <span class="onboarding-tip-text">Включите звук или наденьте наушники</span>
+        <span class="onboarding-tip-icon">♫</span>
+        <span class="onboarding-tip-text">Включите звук</span>
       </div>
-      <button class="onboarding-btn" id="onboarding-btn">Дальше</button>
+      <button class="onboarding-btn" id="onboarding-btn">Начать</button>
     </div>
   </div>
 
