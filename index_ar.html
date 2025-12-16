@@ -276,6 +276,102 @@
     .onboarding-btn:active {
       transform: translateY(-1px);
     }
+
+    /* Финальный экран */
+    #final-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #2d2d2d 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10001;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease-in;
+      padding: 60px 30px;
+      box-sizing: border-box;
+    }
+
+    #final-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .final-question {
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 300;
+      text-align: center;
+      letter-spacing: 2px;
+      margin-top: 40px;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      transition-delay: 0.3s;
+    }
+
+    #final-overlay.visible .final-question {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .final-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .final-btn {
+      background: transparent;
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      padding: 22px 40px;
+      font-size: 1.2rem;
+      font-weight: 500;
+      border-radius: 60px;
+      cursor: pointer;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .final-btn:nth-child(1) {
+      transition-delay: 0.5s;
+    }
+
+    .final-btn:nth-child(2) {
+      transition-delay: 0.7s;
+    }
+
+    #final-overlay.visible .final-btn {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .final-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.6);
+      transform: scale(1.02);
+    }
+
+    .final-btn:active {
+      transform: scale(0.98);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Скрытие AR сцены */
+    .ar-hidden {
+      display: none !important;
+    }
   </style>
 </head>
 
@@ -311,6 +407,15 @@
   <!-- Плашка "Начать" для первого запуска -->
   <div id="start-banner">Тапни чтобы начать</div>
 
+  <!-- Финальный экран -->
+  <div id="final-overlay">
+    <div class="final-question">Кто кем управлял?</div>
+    <div class="final-buttons">
+      <button class="final-btn" id="btn-i-cat">Я котом</button>
+      <button class="final-btn" id="btn-cat-me">Кот мной</button>
+    </div>
+  </div>
+
   <!-- A-Frame AR Scene -->
   <a-scene vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true; precision: medium;" embedded
     arjs="trackingMethod: artoolkit; sourceType: webcam;" device-orientation-permission-ui="enabled: false">
@@ -339,6 +444,7 @@
       <audio id="cat-7-audio" src="assets/audios/cat_7.wav" preload="auto"></audio>
       <audio id="cat-8-audio" src="assets/audios/cat_8.wav" preload="auto"></audio>
       <audio id="cat-10-audio" src="assets/audios/cat_10.wav" preload="auto"></audio>
+      <audio id="final-audio" src="assets/audios/Final.wav" preload="auto"></audio>
     </a-assets>
 
     <a-marker type="pattern" url="assets/markers/hole.patt" smooth="true" smoothCount="5" smoothTolerance=".1">
@@ -360,6 +466,9 @@
     const loadingOverlay = document.getElementById('loading-overlay');
     const catchBanner = document.getElementById('catch-banner');
     const startBanner = document.getElementById('start-banner');
+      const finalOverlay = document.getElementById('final-overlay');
+      const btnICat = document.getElementById('btn-i-cat');
+      const btnCatMe = document.getElementById('btn-cat-me');
 
     // Состояние приложения
     let isAudioPlaying = false;
@@ -377,12 +486,12 @@
     const catScenes = [
       { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-1-audio' },
       { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 -45 0', scale: '2 2 2', audioId: 'cat-2-audio' },
-      { model: '#cat-1-asset', position: '-1 -1 0', rotation: '0 0 90', scale: '1 1 1', audioId: 'cat-3-audio' },
-      { model: '#cat-1-asset', position: '4 -2 1', rotation: '-90 0 180', scale: '1 1 1', audioId: 'cat-4-audio' },
-      { model: '#cat-1-asset', position: '4 0.5 0', rotation: '0 -90 0', scale: '1 1 1', audioId: 'cat-5-audio' },
+      { model: '#cat-1-asset', position: '1 -1 0', rotation: '0 0 90', scale: '1 1 1', audioId: 'cat-3-audio' },
+      { model: '#cat-1-asset', position: '-4 -2 1', rotation: '-90 0 180', scale: '1 1 1', audioId: 'cat-4-audio' },
+      { model: '#cat-1-asset', position: '-4 0.5 0', rotation: '0 -90 0', scale: '1 1 1', audioId: 'cat-5-audio' },
       { model: '#cat-1-asset', position: '0 7.5 0', rotation: '0 0 0', scale: '15 15 15', audioId: 'cat-6-audio' },
       { model: '#cat-1-asset', position: '0 0.1 -1', rotation: '0 -45 0', scale: '0.2 0.2 0.2', audioId: 'cat-7-audio' },
-      { model: '#cat-1-asset', position: '4 3 -4', rotation: '180 180 0', scale: '1 1 1', audioId: 'cat-8-audio' },
+      { model: '#cat-1-asset', position: '-4 3 -4', rotation: '180 180 0', scale: '1 1 1', audioId: 'cat-8-audio' },
       { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-10-audio' },
     ];
 
@@ -465,21 +574,82 @@
     // Обработчик окончания аудио (вынесен отдельно для возможности удаления)
     function onAudioEnded() {
       isAudioPlaying = false;
-      showCatchBanner();
-      console.log('Audio ended, catch mode activated!');
+
+      // Проверяем, была ли это последняя сцена
+      if (currentSceneIndex === catScenes.length - 1) {
+        // Последняя сцена завершена - показываем финальный экран
+        showFinalScreen();
+      } else {
+        showCatchBanner();
+        console.log('Audio ended, catch mode activated!');
+          }
+        }
+
+        // Показать финальный экран
+        function showFinalScreen() {
+          console.log('Showing final screen...');
+
+          // Скрываем все AR элементы
+          const arScene = document.querySelector('a-scene');
+          if (arScene) {
+            arScene.classList.add('ar-hidden');
+          }
+
+          // Скрываем баннеры
+          hideCatchBanner();
+          hideStartBanner();
+
+          // Останавливаем текущее аудио если есть
+          if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+          }
+
+          // Показываем финальный оверлей
+          finalOverlay.classList.add('visible');
+
+          // Запускаем финальное аудио
+          const finalAudio = document.getElementById('final-audio');
+          if (finalAudio) {
+            finalAudio.currentTime = 0;
+            finalAudio.play().catch(function (err) {
+              console.warn('Could not play final audio:', err);
+            });
+          }
+        }
+
+        // Обработчик нажатия на финальные кнопки
+        function handleFinalChoice(choice) {
+          console.log('User chose:', choice);
+
+          // Останавливаем финальное аудио
+          const finalAudio = document.getElementById('final-audio');
+          if (finalAudio) {
+            finalAudio.pause();
+          }
+
+          // Закрываем окно/вкладку
+          window.close();
+
+          // Если окно не закрылось (некоторые браузеры блокируют window.close())
+          // перенаправляем на пустую страницу или показываем сообщение
+          setTimeout(() => {
+            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0d0d0d;color:white;font-family:sans-serif;text-align:center;padding:20px;"><div><h2>Спасибо за участие!</h2><p style="opacity:0.7;">Можете закрыть эту вкладку</p></div></div>';
+          }, 100);
     }
 
     // Функция смены сцены
-    function switchToNextScene() {
-      // const box = document.getElementById('box');
-      // const currentColor = box.getAttribute('material').color;
-      // const newColor = currentColor === 'red' ? 'blue' : 'red';
-      // box.setAttribute('material', 'color: ' + newColor);
-
+      function switchToNextScene() {
       const catModel = document.getElementById('cat-model');
       if (!catModel) return;
 
-      currentSceneIndex = (currentSceneIndex + 1) % catScenes.length;
+      // Проверяем, не последняя ли это сцена
+      if (currentSceneIndex >= catScenes.length - 1) {
+        console.log('Already at last scene, cannot switch further');
+        return;
+      }
+
+      currentSceneIndex = currentSceneIndex + 1;
       const scene = catScenes[currentSceneIndex];
 
       catModel.setAttribute('gltf-model', scene.model);
@@ -606,6 +776,16 @@
     document.addEventListener('DOMContentLoaded', function () {
       window.addEventListener('click', handleInteraction);
       window.addEventListener('touchstart', handleInteraction, { passive: true });
+
+      // Обработчики финальных кнопок
+      btnICat.addEventListener('click', function (e) {
+        e.stopPropagation();
+        handleFinalChoice('i-cat');
+      });
+      btnCatMe.addEventListener('click', function (e) {
+        e.stopPropagation();
+        handleFinalChoice('cat-me');
+      });
     });
   </script>
 
