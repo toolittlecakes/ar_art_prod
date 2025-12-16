@@ -7,11 +7,8 @@
   <title>AR Fox Model with Marker</title>
   <meta name="description" content="Simple AR application displaying a low poly fox 3D model over a Hiro marker">
 
-  <!-- A-Frame library (local) -->
-  <script src="assets/libs/aframe.min.js"></script>
-  <!-- AR.js for marker tracking (local) -->
-  <script src="assets/libs/aframe-ar.js"></script>
-
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
     body {
       margin: 0;
@@ -434,17 +431,17 @@
       <a-asset-item id="cat-9-asset" src="assets/models/cat_9.glb"></a-asset-item>
       <a-asset-item id="cat-10-asset" src="assets/models/cat_10.glb"></a-asset-item> -->
 
-      <!-- Аудио -->
-      <audio id="cat-1-audio" src="assets/audios/cat_1.wav" preload="auto"></audio>
-      <audio id="cat-2-audio" src="assets/audios/cat_2.wav" preload="auto"></audio>
-      <audio id="cat-3-audio" src="assets/audios/cat_3.wav" preload="auto"></audio>
-      <audio id="cat-4-audio" src="assets/audios/cat_4.wav" preload="auto"></audio>
-      <audio id="cat-5-audio" src="assets/audios/cat_5.wav" preload="auto"></audio>
-      <audio id="cat-6-audio" src="assets/audios/cat_6.wav" preload="auto"></audio>
-      <audio id="cat-7-audio" src="assets/audios/cat_7.wav" preload="auto"></audio>
-      <audio id="cat-8-audio" src="assets/audios/cat_8.wav" preload="auto"></audio>
-      <audio id="cat-10-audio" src="assets/audios/cat_10.wav" preload="auto"></audio>
-      <audio id="final-audio" src="assets/audios/Final.wav" preload="auto"></audio>
+      <!-- Аудио (MP3 - в 12 раз меньше чем WAV) -->
+      <audio id="cat-1-audio" src="assets/audios/cat_1.mp3" preload="none"></audio>
+      <audio id="cat-2-audio" src="assets/audios/cat_2.mp3" preload="none"></audio>
+      <audio id="cat-3-audio" src="assets/audios/cat_3.mp3" preload="none"></audio>
+      <audio id="cat-4-audio" src="assets/audios/cat_4.mp3" preload="none"></audio>
+      <audio id="cat-5-audio" src="assets/audios/cat_5.mp3" preload="none"></audio>
+      <audio id="cat-6-audio" src="assets/audios/cat_6.mp3" preload="none"></audio>
+      <audio id="cat-7-audio" src="assets/audios/cat_7.mp3" preload="none"></audio>
+      <audio id="cat-8-audio" src="assets/audios/cat_8.mp3" preload="none"></audio>
+      <audio id="cat-10-audio" src="assets/audios/cat_10.mp3" preload="none"></audio>
+      <audio id="final-audio" src="assets/audios/Final.mp3" preload="none"></audio>
     </a-assets>
 
     <a-marker type="pattern" url="assets/markers/hole.patt" smooth="true" smoothCount="5" smoothTolerance=".1">
@@ -466,9 +463,9 @@
     const loadingOverlay = document.getElementById('loading-overlay');
     const catchBanner = document.getElementById('catch-banner');
     const startBanner = document.getElementById('start-banner');
-      const finalOverlay = document.getElementById('final-overlay');
-      const btnICat = document.getElementById('btn-i-cat');
-      const btnCatMe = document.getElementById('btn-cat-me');
+    const finalOverlay = document.getElementById('final-overlay');
+    const btnICat = document.getElementById('btn-i-cat');
+    const btnCatMe = document.getElementById('btn-cat-me');
 
     // Состояние приложения
     let isAudioPlaying = false;
@@ -582,64 +579,64 @@
       } else {
         showCatchBanner();
         console.log('Audio ended, catch mode activated!');
-          }
-        }
+      }
+    }
 
-        // Показать финальный экран
-        function showFinalScreen() {
-          console.log('Showing final screen...');
+    // Показать финальный экран
+    function showFinalScreen() {
+      console.log('Showing final screen...');
 
-          // Скрываем все AR элементы
-          const arScene = document.querySelector('a-scene');
-          if (arScene) {
-            arScene.classList.add('ar-hidden');
-          }
+      // Скрываем все AR элементы
+      const arScene = document.querySelector('a-scene');
+      if (arScene) {
+        arScene.classList.add('ar-hidden');
+      }
 
-          // Скрываем баннеры
-          hideCatchBanner();
-          hideStartBanner();
+      // Скрываем баннеры
+      hideCatchBanner();
+      hideStartBanner();
 
-          // Останавливаем текущее аудио если есть
-          if (currentAudio) {
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
-          }
+      // Останавливаем текущее аудио если есть
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
 
-          // Показываем финальный оверлей
-          finalOverlay.classList.add('visible');
+      // Показываем финальный оверлей
+      finalOverlay.classList.add('visible');
 
-          // Запускаем финальное аудио
-          const finalAudio = document.getElementById('final-audio');
-          if (finalAudio) {
-            finalAudio.currentTime = 0;
-            finalAudio.play().catch(function (err) {
-              console.warn('Could not play final audio:', err);
-            });
-          }
-        }
+      // Запускаем финальное аудио
+      const finalAudio = document.getElementById('final-audio');
+      if (finalAudio) {
+        finalAudio.currentTime = 0;
+        finalAudio.play().catch(function (err) {
+          console.warn('Could not play final audio:', err);
+        });
+      }
+    }
 
-        // Обработчик нажатия на финальные кнопки
-        function handleFinalChoice(choice) {
-          console.log('User chose:', choice);
+    // Обработчик нажатия на финальные кнопки
+    function handleFinalChoice(choice) {
+      console.log('User chose:', choice);
 
-          // Останавливаем финальное аудио
-          const finalAudio = document.getElementById('final-audio');
-          if (finalAudio) {
-            finalAudio.pause();
-          }
+      // Останавливаем финальное аудио
+      const finalAudio = document.getElementById('final-audio');
+      if (finalAudio) {
+        finalAudio.pause();
+      }
 
-          // Закрываем окно/вкладку
-          window.close();
+      // Закрываем окно/вкладку
+      window.close();
 
-          // Если окно не закрылось (некоторые браузеры блокируют window.close())
-          // перенаправляем на пустую страницу или показываем сообщение
-          setTimeout(() => {
-            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0d0d0d;color:white;font-family:sans-serif;text-align:center;padding:20px;"><div><h2>Спасибо за участие!</h2><p style="opacity:0.7;">Можете закрыть эту вкладку</p></div></div>';
-          }, 100);
+      // Если окно не закрылось (некоторые браузеры блокируют window.close())
+      // перенаправляем на пустую страницу или показываем сообщение
+      setTimeout(() => {
+        document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0d0d0d;color:white;font-family:sans-serif;text-align:center;padding:20px;"><div><h2>Спасибо за участие!</h2><p style="opacity:0.7;">Можете закрыть эту вкладку</p></div></div>';
+      }, 100);
     }
 
     // Функция смены сцены
-      function switchToNextScene() {
+    function switchToNextScene() {
       const catModel = document.getElementById('cat-model');
       if (!catModel) return;
 
