@@ -315,9 +315,10 @@
   <a-scene vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true; precision: medium;" embedded
     arjs="trackingMethod: artoolkit; sourceType: webcam;" device-orientation-permission-ui="enabled: false">
 
-    <!-- Предзагрузка всех моделей котов -->
+    <!-- Предзагрузка всех моделей котов и аудио -->
     <a-assets timeout="90000">
 
+      <!-- Модели -->
       <a-asset-item id="lake-asset"
         src="https://cdn.jsdelivr.net/gh/toolittlecakes/ar_art_prod@main/assets/models/lake.glb"></a-asset-item>
       <a-asset-item id="cat-1-asset"
@@ -331,6 +332,18 @@
       <a-asset-item id="cat-8-asset" src="assets/models/cat_8.glb"></a-asset-item>
       <a-asset-item id="cat-9-asset" src="assets/models/cat_9.glb"></a-asset-item>
       <a-asset-item id="cat-10-asset" src="assets/models/cat_10.glb"></a-asset-item> -->
+<!-- Аудио -->
+<audio id="cat-1-audio" src="https://cdn.jsdelivr.net/gh/toolittlecakes/ar_art_prod@main/assets/audios/cat_1.wav"
+  preload="auto"></audio>
+<audio id="cat-2-audio" src="https://cdn.jsdelivr.net/gh/toolittlecakes/ar_art_prod@main/assets/audios/cat_2.wav"
+  preload="auto"></audio>
+<audio id="cat-3-audio" src="https://cdn.jsdelivr.net/gh/toolittlecakes/ar_art_prod@main/assets/audios/cat_3.wav"
+  preload="auto"></audio>
+<!-- <audio id="cat-4-audio" src="assets/audios/cat_4.wav" preload="auto"></audio>
+      <audio id="cat-6-audio" src="assets/audios/cat_6.wav" preload="auto"></audio>
+      <audio id="cat-8-audio" src="assets/audios/cat_8.wav" preload="auto"></audio>
+      <audio id="cat-9-audio" src="assets/audios/cat_9.wav" preload="auto"></audio>
+      <audio id="cat-10-audio" src="assets/audios/cat_10.wav" preload="auto"></audio> -->
     </a-assets>
 
     <a-marker type="pattern" url="assets/markers/hole.patt" smooth="true" smoothCount="5" smoothTolerance=".1">
@@ -364,16 +377,16 @@
     let shouldShowBannerWhenMarkerVisible = false; // Флаг для отложенного показа плашки
 
     // Конфигурация сцен с котами
-    // Каждая сцена: модель + позиция + поворот + масштаб + аудио
+      // Каждая сцена: модель + позиция + поворот + масштаб + аудио (ID предзагруженного элемента)
     const catScenes = [
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audio: 'assets/audios/cat_1.wav' },
-      { model: '#cat-2-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audio: 'assets/audios/cat_2.wav' },
-      { model: '#cat-3-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audio: 'assets/audios/cat_3.wav' },
-      // { model: '#cat-4-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audio: 'assets/audios/cat_4.wav' },
-      // { model: '#cat-6-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audio: 'assets/audios/cat_6.wav' },
-      // { model: '#cat-8-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audio: 'assets/audios/cat_8.wav' },
-      // { model: '#cat-9-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audio: 'assets/audios/cat_9.wav' },
-      // { model: '#cat-10-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audio: 'assets/audios/cat_10.wav' },
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-1-audio' },
+      { model: '#cat-2-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-2-audio' },
+      { model: '#cat-3-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-3-audio' },
+      // { model: '#cat-4-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-4-audio' },
+      // { model: '#cat-6-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-6-audio' },
+      // { model: '#cat-8-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-8-audio' },
+      // { model: '#cat-9-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-9-audio' },
+      // { model: '#cat-10-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-10-audio' },
     ];
 
     // Текущий аудио объект
@@ -418,28 +431,30 @@
       // Останавливаем предыдущее аудио если есть
       if (currentAudio) {
         currentAudio.pause();
-        currentAudio = null;
+        currentAudio.currentTime = 0; // Сбрасываем позицию для повторного воспроизведения
+        // Убираем старый обработчик ended
+        currentAudio.removeEventListener('ended', onAudioEnded);
       }
 
       isAudioPlaying = true;
       hideCatchBanner();
       shouldShowBannerWhenMarkerVisible = false;
 
-      currentAudio = new Audio(scene.audio);
+      // Используем предзагруженный аудио элемент
+      currentAudio = document.getElementById(scene.audioId);
 
-      // Когда аудио закончилось - показываем плашку
-      currentAudio.addEventListener('ended', function () {
+      if (!currentAudio) {
+        console.warn('Audio element not found:', scene.audioId);
         isAudioPlaying = false;
         showCatchBanner();
-        console.log('Audio ended, catch mode activated!');
-      });
+        return;
+      }
 
-      // Обработка ошибки загрузки аудио (если файл ещё не существует)
-      currentAudio.addEventListener('error', function () {
-        console.warn('Audio file not found:', scene.audio);
-        isAudioPlaying = false;
-        showCatchBanner();
-      });
+      // Сбрасываем позицию на начало
+      currentAudio.currentTime = 0;
+
+      // Добавляем обработчик окончания
+      currentAudio.addEventListener('ended', onAudioEnded);
 
       currentAudio.play().catch(function (err) {
         console.warn('Could not play audio:', err);
@@ -447,7 +462,14 @@
         showCatchBanner();
       });
 
-      console.log('Playing audio:', scene.audio);
+          console.log('Playing audio:', scene.audioId);
+        }
+
+        // Обработчик окончания аудио (вынесен отдельно для возможности удаления)
+        function onAudioEnded() {
+          isAudioPlaying = false;
+          showCatchBanner();
+          console.log('Audio ended, catch mode activated!');
     }
 
     // Функция смены сцены
