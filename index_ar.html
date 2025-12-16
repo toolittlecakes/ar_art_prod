@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Fox Model with Marker</title>
+  <meta name="description" content="Simple AR application displaying a low poly fox 3D model over a Hiro marker">
+
+  <!-- A-Frame library -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <!-- Use marker-only AR.js (without NFT/location features that may use gyroscope) -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Loading overlay */
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease-out;
+    }
+
+    #loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-content {
+      text-align: center;
+      color: white;
+    }
+
+    .loading-title {
+      font-size: 1.5rem;
+      font-weight: 300;
+      margin-bottom: 30px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 25px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Плашка "Поймай меня" */
+    #catch-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 50%, #f0932b 100%);
+      color: white;
+      text-align: center;
+      padding: 20px 30px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      z-index: 1000;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #catch-banner.visible {
+      transform: translateY(0);
+    }
+
+    #catch-banner::before {
+      content: '👆';
+      margin-right: 12px;
+      font-size: 1.2rem;
+    }
+
+    #catch-banner::after {
+      content: '👆';
+      margin-left: 12px;
+      font-size: 1.2rem;
+    }
+
+    /* Пульсация когда активна */
+    #catch-banner.visible {
+      animation: pulse-banner 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-banner {
+
+      0%,
+      100% {
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 -4px 30px rgba(255, 107, 107, 0.6);
+      }
+    }
+
+    /* Плашка "Начать" для первого запуска */
+    #start-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+      padding: 22px 30px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      z-index: 1000;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 -4px 20px rgba(102, 126, 234, 0.4);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #start-banner.visible {
+      transform: translateY(0);
+      animation: pulse-start 1.5s ease-in-out infinite;
+    }
+
+    #start-banner::before {
+      content: '▶️';
+      margin-right: 12px;
+      font-size: 1.2rem;
+    }
+
+    @keyframes pulse-start {
+
+      0%,
+      100% {
+        box-shadow: 0 -4px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 -4px 35px rgba(102, 126, 234, 0.7);
+      }
+    }
+
+    /* Онбординг экран */
+    #onboarding-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      transition: opacity 0.5s ease-out;
+      padding: 30px;
+      box-sizing: border-box;
+    }
+
+    #onboarding-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .onboarding-content {
+      text-align: center;
+      color: white;
+      max-width: 400px;
+    }
+
+    .onboarding-icon {
+      font-size: 4rem;
+      margin-bottom: 25px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .onboarding-title {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+      line-height: 1.4;
+    }
+
+    .onboarding-description {
+      font-size: 1.1rem;
+      font-weight: 300;
+      margin-bottom: 35px;
+      line-height: 1.6;
+      opacity: 0.9;
+    }
+
+    .onboarding-tip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px 25px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(10px);
+    }
+
+    .onboarding-tip-icon {
+      font-size: 1.8rem;
+    }
+
+    .onboarding-tip-text {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .onboarding-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 18px 50px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .onboarding-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+    }
+
+    .onboarding-btn:active {
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Онбординг экран -->
+  <div id="onboarding-overlay">
+    <div class="onboarding-content">
+      <div class="onboarding-icon">🎭</div>
+      <div class="onboarding-title">Интерактивный<br>аудио-визуальный опыт</div>
+      <div class="onboarding-description">
+        Вас ждёт погружение в мир AR-искусства со звуком и визуальными эффектами
+      </div>
+      <div class="onboarding-tip">
+        <span class="onboarding-tip-icon">🎧</span>
+        <span class="onboarding-tip-text">Включите звук или наденьте наушники</span>
+      </div>
+      <button class="onboarding-btn" id="onboarding-btn">Дальше</button>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="hidden">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-title">Загрузка моделей</div>
+    </div>
+  </div>
+
+  <!-- Плашка "Поймай меня" -->
+  <div id="catch-banner">Поймай меня</div>
+
+  <!-- Плашка "Начать" для первого запуска -->
+  <div id="start-banner">Тапни чтобы начать</div>
+
+  <!-- A-Frame AR Scene -->
+  <a-scene vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true; precision: medium;" embedded
+    arjs="trackingMethod: artoolkit; sourceType: webcam;" device-orientation-permission-ui="enabled: false">
+
+    <!-- Предзагрузка всех моделей котов и аудио -->
+    <a-assets timeout="90000">
+
+      <!-- Модели -->
+      <a-asset-item id="lake-asset" src="assets/models/lake.glb"></a-asset-item>
+      <a-asset-item id="cat-1-asset" src="assets/models/cat_1.glb"></a-asset-item>
+      <a-asset-item id="cat-2-asset" src="assets/models/cat_2.glb"></a-asset-item>
+      <a-asset-item id="cat-3-asset" src="assets/models/cat_3.glb"></a-asset-item>
+      <a-asset-item id="cat-4-asset" src="assets/models/cat_4.glb"></a-asset-item>
+      <a-asset-item id="cat-6-asset" src="assets/models/cat_6.glb"></a-asset-item>
+      <a-asset-item id="cat-8-asset" src="assets/models/cat_8.glb"></a-asset-item>
+      <a-asset-item id="cat-9-asset" src="assets/models/cat_9.glb"></a-asset-item>
+      <a-asset-item id="cat-10-asset" src="assets/models/cat_10.glb"></a-asset-item>
+      
+      <!-- Аудио -->
+      <audio id="cat-1-audio" src="assets/audios/cat_1.wav" preload="auto"></audio>
+      <audio id="cat-2-audio" src="assets/audios/cat_2.wav" preload="auto"></audio>
+      <audio id="cat-3-audio" src="assets/audios/cat_3.wav" preload="auto"></audio>
+      <audio id="cat-4-audio" src="assets/audios/cat_4.wav" preload="auto"></audio>
+      <audio id="cat-6-audio" src="assets/audios/cat_6.wav" preload="auto"></audio>
+      <audio id="cat-8-audio" src="assets/audios/cat_8.wav" preload="auto"></audio>
+      <audio id="cat-9-audio" src="assets/audios/cat_9.wav" preload="auto"></audio>
+      <audio id="cat-10-audio" src="assets/audios/cat_10.wav" preload="auto"></audio>
+    </a-assets>
+
+    <a-marker type="pattern" url="assets/markers/hole.patt" smooth="true" smoothCount="5" smoothTolerance=".1">
+      <a-box id="box" position="0 0.5 0" rotation="0 0 0" scale="1 1 1"
+        material="color: red; opacity: 0.5; transparent: true"></a-box>
+
+      <!-- Модель кота, которая будет меняться по клику -->
+      <a-entity id="cat-model" gltf-model="#cat-1-asset" scale="1 1 1" position="0 0.5 0" rotation="0 0 0">
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    const onboardingOverlay = document.getElementById('onboarding-overlay');
+    const onboardingBtn = document.getElementById('onboarding-btn');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const catchBanner = document.getElementById('catch-banner');
+    const startBanner = document.getElementById('start-banner');
+
+    // Состояние приложения
+    let isAudioPlaying = false;
+    let canCatch = false;
+    let currentSceneIndex = 0;
+    let isMarkerVisible = false;
+    let isSceneReady = false;
+    let isSceneLoaded = false; // Флаг загрузки сцены (для онбординга)
+    let hasStartedFirstAudio = false; // Отслеживаем, запустили ли первое аудио
+    let waitingForFirstTap = false; // Ждём первый тап для запуска аудио
+    let shouldShowBannerWhenMarkerVisible = false; // Флаг для отложенного показа плашки
+
+    // Конфигурация сцен с котами
+    // Каждая сцена: модель + позиция + поворот + масштаб + аудио (ID предзагруженного элемента)
+    const catScenes = [
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-1-audio' },
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-2-audio' },
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-3-audio' },
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-4-audio' },
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-6-audio' },
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-8-audio' },
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-9-audio' },
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-10-audio' },
+    ];
+
+    // Текущий аудио объект
+    let currentAudio = null;
+
+    // Показать плашку "Начать" (для первого запуска)
+    function showStartBanner() {
+      if (isMarkerVisible) {
+        waitingForFirstTap = true;
+        startBanner.classList.add('visible');
+      }
+    }
+
+    // Скрыть плашку "Начать"
+    function hideStartBanner() {
+      waitingForFirstTap = false;
+      startBanner.classList.remove('visible');
+    }
+
+    // Показать плашку "Поймай меня" (только если маркер виден)
+    function showCatchBanner() {
+      if (isMarkerVisible) {
+        canCatch = true;
+        catchBanner.classList.add('visible');
+        shouldShowBannerWhenMarkerVisible = false;
+      } else {
+        // Запоминаем, что нужно показать плашку когда маркер появится
+        shouldShowBannerWhenMarkerVisible = true;
+      }
+    }
+
+    // Скрыть плашку "Поймай меня"
+    function hideCatchBanner() {
+      canCatch = false;
+      catchBanner.classList.remove('visible');
+    }
+
+    // Запустить аудио для текущей сцены
+    function playSceneAudio() {
+      const scene = catScenes[currentSceneIndex];
+
+      // Останавливаем предыдущее аудио если есть
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0; // Сбрасываем позицию для повторного воспроизведения
+        // Убираем старый обработчик ended
+        currentAudio.removeEventListener('ended', onAudioEnded);
+      }
+
+      isAudioPlaying = true;
+      hideCatchBanner();
+      shouldShowBannerWhenMarkerVisible = false;
+
+      // Используем предзагруженный аудио элемент
+      currentAudio = document.getElementById(scene.audioId);
+
+      if (!currentAudio) {
+        console.warn('Audio element not found:', scene.audioId);
+        isAudioPlaying = false;
+        showCatchBanner();
+        return;
+      }
+
+      // Сбрасываем позицию на начало
+      currentAudio.currentTime = 0;
+
+      // Добавляем обработчик окончания
+      currentAudio.addEventListener('ended', onAudioEnded);
+
+      currentAudio.play().catch(function (err) {
+        console.warn('Could not play audio:', err);
+        isAudioPlaying = false;
+        showCatchBanner();
+      });
+
+      console.log('Playing audio:', scene.audioId);
+    }
+
+    // Обработчик окончания аудио (вынесен отдельно для возможности удаления)
+    function onAudioEnded() {
+      isAudioPlaying = false;
+      showCatchBanner();
+      console.log('Audio ended, catch mode activated!');
+    }
+
+    // Функция смены сцены
+    function switchToNextScene() {
+      const box = document.getElementById('box');
+      const currentColor = box.getAttribute('material').color;
+      const newColor = currentColor === 'red' ? 'blue' : 'red';
+      box.setAttribute('material', 'color: ' + newColor);
+
+      const catModel = document.getElementById('cat-model');
+      if (!catModel) return;
+
+      currentSceneIndex = (currentSceneIndex + 1) % catScenes.length;
+      const scene = catScenes[currentSceneIndex];
+
+      catModel.setAttribute('gltf-model', scene.model);
+      catModel.setAttribute('position', scene.position);
+      catModel.setAttribute('rotation', scene.rotation);
+      catModel.setAttribute('scale', scene.scale);
+
+      console.log('Switched to cat scene:', currentSceneIndex + 1, scene.model);
+
+      // Запускаем аудио для новой сцены
+      playSceneAudio();
+    }
+
+    // Обработка клика/тапа
+    function handleInteraction(e) {
+      // Игнорируем клики если маркер не виден
+      if (!isMarkerVisible) {
+        console.log('Marker not visible, ignoring click');
+        return;
+      }
+
+      // Если ждём первый тап для запуска — запускаем первое аудио
+      if (waitingForFirstTap) {
+        console.log('First tap received, starting audio!');
+        hideStartBanner();
+        hasStartedFirstAudio = true;
+        playSceneAudio();
+        return;
+      }
+
+      // Игнорируем клики пока аудио играет
+      if (isAudioPlaying) {
+        console.log('Audio is playing, ignoring click');
+        return;
+      }
+
+      // Игнорируем если ещё не можем ловить
+      if (!canCatch) {
+        console.log('Catch mode not active yet');
+        return;
+      }
+
+      // Скрываем плашку и переключаем сцену
+      hideCatchBanner();
+      switchToNextScene();
+    }
+
+    // Обработка появления маркера
+    function onMarkerFound() {
+      console.log('Marker found!');
+      isMarkerVisible = true;
+
+      // Если сцена готова и ещё не запускали первое аудио — показываем плашку "Начать"
+      if (isSceneReady && !hasStartedFirstAudio && !waitingForFirstTap) {
+        showStartBanner();
+      }
+
+      // Если ждали первый тап и маркер вернулся — показываем плашку снова
+      if (!hasStartedFirstAudio && waitingForFirstTap) {
+        startBanner.classList.add('visible');
+      }
+
+      // Если нужно показать плашку "Поймай меня" (аудио закончилось пока маркер был скрыт)
+      if (shouldShowBannerWhenMarkerVisible && !isAudioPlaying && hasStartedFirstAudio) {
+        showCatchBanner();
+      }
+    }
+
+    // Обработка потери маркера
+    function onMarkerLost() {
+      console.log('Marker lost!');
+      isMarkerVisible = false;
+
+      // Скрываем плашку "Начать" когда маркер потерян
+      if (waitingForFirstTap) {
+        startBanner.classList.remove('visible');
+      }
+
+      // Скрываем плашку "Поймай меня" когда маркер потерян
+      if (canCatch) {
+        hideCatchBanner();
+        // Запоминаем, что плашку нужно показать когда маркер вернётся
+        shouldShowBannerWhenMarkerVisible = true;
+      }
+    }
+
+    // Онбординг: кнопка "Дальше"
+    onboardingBtn.addEventListener('click', function () {
+      onboardingOverlay.classList.add('hidden');
+
+      // Если сцена уже загружена — сразу скрываем лоадер
+      if (isSceneLoaded) {
+        loadingOverlay.classList.add('hidden');
+        isSceneReady = true;
+        console.log('Scene already loaded, ready!');
+      } else {
+        // Иначе показываем лоадер и ждём загрузки
+        loadingOverlay.classList.remove('hidden');
+      }
+    });
+
+    // Скрыть лоадер когда сцена загружена
+    document.querySelector('a-scene').addEventListener('loaded', function () {
+      console.log('Scene loaded event fired');
+      isSceneLoaded = true;
+
+      // Подписываемся на события маркера
+      const marker = document.querySelector('a-marker');
+      if (marker) {
+        marker.addEventListener('markerFound', onMarkerFound);
+        marker.addEventListener('markerLost', onMarkerLost);
+      }
+
+      // Скрываем лоадер только если онбординг уже пройден
+      // (если онбординг ещё показывается, hidden класс уже стоит на лоадере)
+      setTimeout(() => {
+        loadingOverlay.classList.add('hidden');
+        isSceneReady = true;
+        console.log('Scene ready, waiting for marker...');
+      }, 300);
+    });
+
+    // Клик/тап на экран — переключение сцены (если разрешено)
+    document.addEventListener('DOMContentLoaded', function () {
+      window.addEventListener('click', handleInteraction);
+      window.addEventListener('touchstart', handleInteraction, { passive: true });
+    });
+  </script>
+
+</body>
+
+</html>

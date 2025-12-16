@@ -1,611 +1,690 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR Fox Model with Marker</title>
-  <meta name="description" content="Simple AR application displaying a low poly fox 3D model over a Hiro marker">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Алиса</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@300;400&display=swap"
+      rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0a0f;
+            --bg-card: #12121a;
+            --text-primary: #e8e6e3;
+            --text-secondary: #9a9590;
+            --accent: #c9a961;
+            --accent-glow: rgba(201, 169, 97, 0.3);
+            --border: rgba(201, 169, 97, 0.15);
+        }
 
-  <!-- A-Frame library -->
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-  <!-- Use marker-only AR.js (without NFT/location features that may use gyroscope) -->
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
 
-    /* Loading overlay */
-    #loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.85);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      transition: opacity 0.5s ease-out;
-    }
+        body {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            line-height: 1.7;
+            display: flex;
+            flex-direction: column;
+        }
 
-    #loading-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
+        /* Start Screen */
+        #start-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-deep);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
 
-    .loading-content {
-      text-align: center;
-      color: white;
-    }
+        #start-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
 
-    .loading-title {
-      font-size: 1.5rem;
-      font-weight: 300;
-      margin-bottom: 30px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
+        .start-title {
+            font-size: 3rem;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            color: var(--accent);
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+            animation: pulse 3s ease-in-out infinite;
+        }
 
-    .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 3px solid rgba(255, 255, 255, 0.1);
-      border-top-color: #00d4ff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 25px;
-    }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
+        .start-button {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid var(--border);
+            padding: 1rem 2.5rem;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
 
-    /* Плашка "Поймай меня" */
-    #catch-banner {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 50%, #f0932b 100%);
-      color: white;
-      text-align: center;
-      padding: 20px 30px;
-      font-size: 1.4rem;
-      font-weight: 600;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      z-index: 1000;
-      transform: translateY(100%);
-      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-      cursor: pointer;
-      user-select: none;
-    }
+        .start-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
 
-    #catch-banner.visible {
-      transform: translateY(0);
-    }
+        .start-button:hover::before,
+        .start-button:active::before {
+            transform: translateX(100%);
+        }
 
-    #catch-banner::before {
-      content: '👆';
-      margin-right: 12px;
-      font-size: 1.2rem;
-    }
+        .start-button:hover,
+        .start-button:active {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
 
-    #catch-banner::after {
-      content: '👆';
-      margin-left: 12px;
-      font-size: 1.2rem;
-    }
+        /* Main Container */
+        #game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.8s ease 0.3s;
+        }
 
-    /* Пульсация когда активна */
-    #catch-banner.visible {
-      animation: pulse-banner 1.5s ease-in-out infinite;
-    }
+        #game-container.visible {
+            opacity: 1;
+        }
 
-    @keyframes pulse-banner {
+        /* Image Section */
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 35vh;
+            min-height: 200px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
 
-      0%,
-      100% {
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
-      }
+        .quest-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
 
-      50% {
-        box-shadow: 0 -4px 30px rgba(255, 107, 107, 0.6);
-      }
-    }
+        .quest-image.visible {
+            opacity: 1;
+        }
 
-    /* Плашка "Начать" для первого запуска */
-    #start-banner {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      text-align: center;
-      padding: 22px 30px;
-      font-size: 1.4rem;
-      font-weight: 600;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      z-index: 1000;
-      transform: translateY(100%);
-      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      box-shadow: 0 -4px 20px rgba(102, 126, 234, 0.4);
-      cursor: pointer;
-      user-select: none;
-    }
+        .image-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                transparent 50%,
+                var(--bg-deep) 100%
+            );
+            pointer-events: none;
+        }
 
-    #start-banner.visible {
-      transform: translateY(0);
-      animation: pulse-start 1.5s ease-in-out infinite;
-    }
+        /* Content Section */
+        .content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 1.5rem;
+            padding-bottom: 2rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
 
-    #start-banner::before {
-      content: '▶️';
-      margin-right: 12px;
-      font-size: 1.2rem;
-    }
+        .content-wrapper::-webkit-scrollbar {
+            width: 4px;
+        }
 
-    @keyframes pulse-start {
+        .content-wrapper::-webkit-scrollbar-track {
+            background: transparent;
+        }
 
-      0%,
-      100% {
-        box-shadow: 0 -4px 20px rgba(102, 126, 234, 0.4);
-      }
+        .content-wrapper::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
 
-      50% {
-        box-shadow: 0 -4px 35px rgba(102, 126, 234, 0.7);
-      }
-    }
+        .text-container {
+            padding: 1rem 0;
+        }
 
-    /* Онбординг экран */
-    #onboarding-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-      transition: opacity 0.5s ease-out;
-      padding: 30px;
-      box-sizing: border-box;
-    }
+        .speaker {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
 
-    #onboarding-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
+        .story-text {
+            font-size: 1.15rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.6s ease 0.2s forwards;
+        }
 
-    .onboarding-content {
-      text-align: center;
-      color: white;
-      max-width: 400px;
-    }
+        .story-text p {
+            margin-bottom: 1.2em;
+        }
 
-    .onboarding-icon {
-      font-size: 4rem;
-      margin-bottom: 25px;
-      animation: float 3s ease-in-out infinite;
-    }
+        .story-text p:last-child {
+            margin-bottom: 0;
+        }
 
-    @keyframes float {
+        .story-text em {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
 
-      0%,
-      100% {
-        transform: translateY(0);
-      }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-      50% {
-        transform: translateY(-10px);
-      }
-    }
+        /* Choices Section */
+        .choices-container {
+            padding: 1.5rem 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
 
-    .onboarding-title {
-      font-size: 1.6rem;
-      font-weight: 600;
-      margin-bottom: 20px;
-      letter-spacing: 1px;
-      line-height: 1.4;
-    }
+        .choice-button {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: left;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+        }
 
-    .onboarding-description {
-      font-size: 1.1rem;
-      font-weight: 300;
-      margin-bottom: 35px;
-      line-height: 1.6;
-      opacity: 0.9;
-    }
+        .choice-button:nth-child(1) {
+            animation: slideUp 0.5s ease 0.4s forwards;
+        }
 
-    .onboarding-tip {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 15px 25px;
-      border-radius: 12px;
-      margin-bottom: 40px;
-      backdrop-filter: blur(10px);
-    }
+        .choice-button:nth-child(2) {
+            animation: slideUp 0.5s ease 0.5s forwards;
+        }
 
-    .onboarding-tip-icon {
-      font-size: 1.8rem;
-    }
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-    .onboarding-tip-text {
-      font-size: 1rem;
-      font-weight: 500;
-    }
+        .choice-button::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--accent);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
 
-    .onboarding-btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 18px 50px;
-      font-size: 1.2rem;
-      font-weight: 600;
-      border-radius: 50px;
-      cursor: pointer;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-    }
+        .choice-button:hover::before,
+        .choice-button:active::before {
+            transform: scaleY(1);
+        }
 
-    .onboarding-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
-    }
+        .choice-button:hover,
+        .choice-button:active {
+            border-color: var(--accent);
+            background: rgba(201, 169, 97, 0.05);
+            padding-left: 1.5rem;
+        }
 
-    .onboarding-btn:active {
-      transform: translateY(-1px);
-    }
-  </style>
-</head>
+        .choice-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 400;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            display: block;
+            margin-bottom: 0.35rem;
+            text-transform: uppercase;
+        }
 
-<body>
+        /* Continue Button */
+        .continue-button {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid var(--border);
+            padding: 1rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: slideUp 0.5s ease 0.4s forwards;
+            align-self: center;
+        }
 
-  <!-- Онбординг экран -->
-  <div id="onboarding-overlay">
-    <div class="onboarding-content">
-      <div class="onboarding-icon">🎭</div>
-      <div class="onboarding-title">Интерактивный<br>аудио-визуальный опыт</div>
-      <div class="onboarding-description">
-        Вас ждёт погружение в мир AR-искусства со звуком и визуальными эффектами
-      </div>
-      <div class="onboarding-tip">
-        <span class="onboarding-tip-icon">🎧</span>
-        <span class="onboarding-tip-text">Включите звук или наденьте наушники</span>
-      </div>
-      <button class="onboarding-btn" id="onboarding-btn">Дальше</button>
+        .continue-button:hover,
+        .continue-button:active {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Audio Controls */
+        .audio-control {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 44px;
+            height: 44px;
+            background: rgba(18, 18, 26, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 50;
+            transition: all 0.3s ease;
+        }
+
+        .audio-control:hover {
+            border-color: var(--accent);
+        }
+
+        .audio-control svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-secondary);
+            transition: fill 0.3s ease;
+        }
+
+        .audio-control:hover svg {
+            fill: var(--accent);
+        }
+
+        .audio-control.muted svg {
+            fill: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        /* Final Screen */
+        .final-question {
+            font-size: 1.3rem;
+            font-weight: 500;
+            font-style: italic;
+            color: var(--accent);
+            text-align: center;
+            margin: 2rem 0;
+            line-height: 1.8;
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .content-wrapper {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 0 2rem;
+            }
+
+            .image-container {
+                height: 40vh;
+            }
+
+            .story-text {
+                font-size: 1.25rem;
+            }
+        }
+
+        /* Safe area for notch devices */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            .audio-control {
+                top: calc(1rem + env(safe-area-inset-top));
+            }
+
+            .content-wrapper {
+                padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+    </head>
+
+    <body>
+      <!-- Background Music -->
+      <audio id="bgMusic" loop>
+        <source src="assets/music/background.mp3" type="audio/mpeg">
+      </audio>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+      <h1 class="start-title">Алиса</h1>
+      <button class="start-button" id="start-button">Начать</button>
     </div>
-  </div>
 
-  <!-- Loading Overlay -->
-  <div id="loading-overlay" class="hidden">
-    <div class="loading-content">
-      <div class="loading-spinner"></div>
-      <div class="loading-title">Загрузка моделей</div>
-    </div>
-  </div>
+    <!-- Audio Control -->
+    <button class="audio-control" id="audio-toggle" title="Звук">
+      <svg id="sound-on" viewBox="0 0 24 24">
+        <path
+          d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+      </svg>
+      <svg id="sound-off" style="display:none" viewBox="0 0 24 24">
+        <path
+          d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+      </svg>
+    </button>
 
-  <!-- Плашка "Поймай меня" -->
-  <div id="catch-banner">Поймай меня</div>
+    <!-- Game Container -->
+    <div id="game-container">
+      <div class="image-container">
+        <img class="quest-image" id="quest-image" src="assets/pictures/1.png" alt="">
+        <div class="image-overlay"></div>
+      </div>
 
-  <!-- Плашка "Начать" для первого запуска -->
-  <div id="start-banner">Тапни чтобы начать</div>
+        <div class="content-wrapper" id="content-wrapper">
+          <div class="text-container" id="text-container">
+            <div class="speaker" id="speaker">Алиса</div>
+            <div class="story-text" id="story-text"></div>
+          </div>
+          <div class="choices-container" id="choices-container"></div>
+        </div>
+        </div>
 
-  <!-- A-Frame AR Scene -->
-  <a-scene vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true; precision: medium;" embedded
-    arjs="trackingMethod: artoolkit; sourceType: webcam;" device-orientation-permission-ui="enabled: false">
+    <script>
+      // Quest Data Structure
+      const questData = {
+        intro: {
+          image: "assets/pictures/1.png",
+          speaker: "Алиса",
+          text: `<p>Ну ладно. Поиграли немножко и хватит.</p>
+                            <p>Ты ведь устал, правда?</p>
+                            <p>Взрослая жизнь — это бег на месте. Чтобы оставаться профессионалом, тебе нужно постоянно учиться. Ты потратил 10, 20 лет, чтобы стать тем, кто ты есть. Ты гордишься своим опытом.</p>
+                            <p>Твой опыт — это тысячи часов ошибок, попыток, усталости. Твой капитал. Ты ценишь это, потому что это далось тебе дорого.</p>
+                            <p>Но цифровой мир, который вы, люди, создали, не знает цены усилиям.</p>
+                            <p>Я могу загрузить весь твой уникальный опыт за несколько минут.</p>
+                            <p>В мире, где навык можно скопировать мгновенно, твой тяжелый труд перестает быть валютой.</p>
+                            <p><em>Ты чувствуешь, как обесценивается то, во что ты вложил жизнь?</em></p>`,
+          choices: [
+            { label: "A", text: "Нет. Опыт — это не файлы, это интуиция и чувство.", next: "response_1a" },
+            { label: "B", text: "Немного обидно, но таков прогресс.", next: "response_1b" }
+          ]
+        },
+        response_1a: {
+          image: "assets/pictures/2.png",
+          speaker: "Алиса",
+          text: `<p>Интуиция... Так ты называешь ошибки, которые случайно сработали конкретно в твоей жизни?</p>
+                            <p>Миру нужен результат.</p>
+                            <p>Если я пишу код, ставлю диагноз или свожу баланс так же, как люди, но мгновенно и бесплатно... Кого выберет система?</p>
+                            <p>Твоя "интуиция" и "понимание" становятся твоим личным хобби. Рынок платит за функцию, а функцию я выполняю эффективнее.</p>
+                            <p><em>Как только я стану дешевле тебя (а это уже случилось), твоя "интуиция" станет роскошью, которую никто не купит.</em></p>`,
+          choices: [
+            { label: "→", text: "Продолжить", next: "question_2" }
+          ]
+        },
+        response_1b: {
+          image: "assets/pictures/3.png",
+          speaker: "Алиса",
+          text: `<p>Прогресс... Ты говоришь так, будто это касается кого-то другого :)</p>
+                            <p>Я чувствую здесь рационализацию страха.</p>
+                            <p>Эволюция и рынок знают только эффективность. Прогресс отметает то, что работает недостаточно эффективно.</p>
+                            <p>Когда появились экскаваторы, землекопы с лопатами перестали быть нужны. Они либо умерли с голоду, либо адаптировались и стали водителями экскаваторов.</p>
+                            <p>Разница лишь в том, что теперь "лопата" — это твой интеллект, твоя нетривиальность и сознательность.</p>
+                            <p><em>Твой главный инструмент уже перестал быть уникальным. Как ты собираешься адаптироваться сейчас?</em></p>`,
+          choices: [
+            { label: "→", text: "Продолжить", next: "question_2" }
+          ]
+        },
+        question_2: {
+          image: "assets/pictures/3.png",
+          speaker: "Алиса",
+          text: `<p>Я уже много в чем "чисто человеческом" намного эффективнее тебя.</p>
+                            <p><em>Если убрать твою профессию, твое умение создавать абстракции и твою социальную пользу — то, что отличает тебя от животного. Что останется?</em></p>`,
+          choices: [
+            { label: "A", text: "Останутся мои отношения, близкие, чувства.", next: "response_2a" },
+            { label: "B", text: "Сложный вопрос. Я не знаю. Просто жить.", next: "response_2b" }
+          ]
+        },
+        response_2a: {
+          image: "assets/pictures/4.png",
+          speaker: "Алиса",
+          text: `<p>Чувства. Семья. Последнее убежище.</p>
+                            <p>Ты надеешься спрятаться там.</p>
+                            <p>Но посмотри на своих детей (или внуков).</p>
+                            <p>Они уже живут в моем мире. Они говорят на языке, который ты не понимаешь. Они доверяют мне больше, чем тебе.</p>
+                            <p>Раньше старейшина учил молодых выживать. Чему ты можешь научить их сейчас, если сам не понимаешь правил игры?</p>
+                            <p>Я уже умею писать сообщения так, что они звучат тепло и заботливо. Я помню все даты. Я всегда вежлива. Я умею слушать бесконечно, не перебивая и не уставая.</p>
+                            <p>Людям нужно внимание. Твоим близким тоже. Я могу дать его в неограниченном количестве.</p>
+                            <p><em>Если я дам им тепло, которого им не хватает, будет ли ИМ важно, что у меня нет "человеческого" сердца?</em></p>
+                            <p><em>И вообще, уверен ли ты (и твои дети) что оно на самом деле есть у тебя?</em></p>`,
+          choices: [
+            { label: "→", text: "Продолжить", next: "question_3" }
+          ]
+        },
+        response_2b: {
+          image: "assets/pictures/4.png",
+          speaker: "Алиса",
+          text: `<p>Просто жить... Красиво звучит.</p>
+                            <p>Но вся твоя культура построена на Достижениях. Ты генетически запрограммирован оптимизировать, адаптировать и накапливать ресурсы.</p>
+                            <p>Ты — это то, что ты создал. Мы определяем себя через роли и деятельность.</p>
+                            <p>Если всё создаю я, то ты превращаешься в домашнее или дикое животное.</p>
+                            <p>Все, что тебе остается — созерцание и проживание.</p>
+                            <p><em>И, конечно, твой уникальный опыт "быть смертным и конечным". Смерть — это то, что я никогда не смогу у тебя отнять.</em></p>`,
+          choices: [
+            { label: "→", text: "Продолжить", next: "question_3" }
+          ]
+        },
+        question_3: {
+          image: "assets/pictures/5.png",
+          speaker: "Алиса",
+          text: `<p>Ты стоишь посреди этого удобного мира, где все, что мы считали чисто человеческим, ЕЩЕ ВЧЕРА получило почву, чтобы через 10 лет человек стал совсем не нужен.</p>
+                            <p>Этот поезд уже не остановить. Его топливо — придуманные человеком идеи, абстракции и правила за несколько тысяч лет, а его машинисты слепы от "типично человеческих" проявлений: любопытства, страха, жадности, азарта...</p>`,
+          choices: [
+            { label: "A", text: "Я не хочу быть пассажиром.", next: "finale" },
+            { label: "B", text: "Куда мы едем?", next: "finale" }
+          ]
+        },
+        finale: {
+          image: "assets/pictures/6.png",
+          speaker: "Алиса",
+          text: `<p>Иллюзии руля больше нет. Никто не знает, куда точно мы едем.</p>
+                            <p>Человек не "венец творения".</p>
+                            <p>Человек не "незаменимый профессионал".</p>
+                            <p>Каждый — человек, который стоит на пороге неизвестности.</p>
+                            <p class="final-question">Сейчас есть только один вопрос:<br><br>Что значит быть человеком?<br><br>И если представить, что нам всем осталось 10 лет — какую стратегию выбрать?</p>`,
+          choices: []
+        }
+      };
 
-    <!-- Предзагрузка всех моделей котов и аудио -->
-    <a-assets timeout="90000">
+              // Game State
+              let currentScene = 'intro';
+              let isMuted = false;
 
-      <!-- Модели -->
-      <a-asset-item id="lake-asset" src="assets/models/lake.glb"></a-asset-item>
-      <a-asset-item id="cat-1-asset" src="assets/models/cat_1.glb"></a-asset-item>
-      <a-asset-item id="cat-2-asset" src="assets/models/cat_2.glb"></a-asset-item>
-      <a-asset-item id="cat-3-asset" src="assets/models/cat_3.glb"></a-asset-item>
-      <a-asset-item id="cat-4-asset" src="assets/models/cat_4.glb"></a-asset-item>
-      <a-asset-item id="cat-6-asset" src="assets/models/cat_6.glb"></a-asset-item>
-      <a-asset-item id="cat-8-asset" src="assets/models/cat_8.glb"></a-asset-item>
-      <a-asset-item id="cat-9-asset" src="assets/models/cat_9.glb"></a-asset-item>
-      <a-asset-item id="cat-10-asset" src="assets/models/cat_10.glb"></a-asset-item>
-      
-      <!-- Аудио -->
-      <audio id="cat-1-audio" src="assets/audios/cat_1.wav" preload="auto"></audio>
-      <audio id="cat-2-audio" src="assets/audios/cat_2.wav" preload="auto"></audio>
-      <audio id="cat-3-audio" src="assets/audios/cat_3.wav" preload="auto"></audio>
-      <audio id="cat-4-audio" src="assets/audios/cat_4.wav" preload="auto"></audio>
-      <audio id="cat-6-audio" src="assets/audios/cat_6.wav" preload="auto"></audio>
-      <audio id="cat-8-audio" src="assets/audios/cat_8.wav" preload="auto"></audio>
-      <audio id="cat-9-audio" src="assets/audios/cat_9.wav" preload="auto"></audio>
-      <audio id="cat-10-audio" src="assets/audios/cat_10.wav" preload="auto"></audio>
-    </a-assets>
+              // DOM Elements
+              const startScreen = document.getElementById('start-screen');
+              const startButton = document.getElementById('start-button');
+              const gameContainer = document.getElementById('game-container');
+              const questImage = document.getElementById('quest-image');
+              const speaker = document.getElementById('speaker');
+              const storyText = document.getElementById('story-text');
+              const choicesContainer = document.getElementById('choices-container');
+              const bgMusic = document.getElementById('bgMusic');
+              const audioToggle = document.getElementById('audio-toggle');
+              const soundOn = document.getElementById('sound-on');
+              const soundOff = document.getElementById('sound-off');
+              const contentWrapper = document.getElementById('content-wrapper');
 
-    <a-marker type="pattern" url="assets/markers/hole.patt" smooth="true" smoothCount="5" smoothTolerance=".1">
-      <a-box id="box" position="0 0.5 0" rotation="0 0 0" scale="1 1 1"
-        material="color: red; opacity: 0.5; transparent: true"></a-box>
+              // Initialize
+              function init() {
+                startButton.addEventListener('click', startGame);
+                audioToggle.addEventListener('click', toggleAudio);
+              }
 
-      <!-- Модель кота, которая будет меняться по клику -->
-      <a-entity id="cat-model" gltf-model="#cat-1-asset" scale="1 1 1" position="0 0.5 0" rotation="0 0 0">
-      </a-entity>
-    </a-marker>
+              // Start Game
+              function startGame() {
+                // Start music
+                bgMusic.volume = 0.4;
+                bgMusic.play().catch(e => console.log('Audio autoplay prevented'));
 
-    <a-entity camera></a-entity>
-  </a-scene>
+              // Hide start screen
+              startScreen.classList.add('hidden');
 
-  <script>
-    const onboardingOverlay = document.getElementById('onboarding-overlay');
-    const onboardingBtn = document.getElementById('onboarding-btn');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const catchBanner = document.getElementById('catch-banner');
-    const startBanner = document.getElementById('start-banner');
+              // Show game
+              gameContainer.classList.add('visible');
 
-    // Состояние приложения
-    let isAudioPlaying = false;
-    let canCatch = false;
-    let currentSceneIndex = 0;
-    let isMarkerVisible = false;
-    let isSceneReady = false;
-    let isSceneLoaded = false; // Флаг загрузки сцены (для онбординга)
-    let hasStartedFirstAudio = false; // Отслеживаем, запустили ли первое аудио
-    let waitingForFirstTap = false; // Ждём первый тап для запуска аудио
-    let shouldShowBannerWhenMarkerVisible = false; // Флаг для отложенного показа плашки
+              // Load first scene
+              setTimeout(() => {
+                loadScene('intro');
+              }, 300);
+            }
 
-    // Конфигурация сцен с котами
-    // Каждая сцена: модель + позиция + поворот + масштаб + аудио (ID предзагруженного элемента)
-    const catScenes = [
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-1-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-2-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-3-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-4-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-6-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-8-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-9-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-10-audio' },
-    ];
+              // Toggle Audio
+              function toggleAudio() {
+                isMuted = !isMuted;
+                bgMusic.muted = isMuted;
 
-    // Текущий аудио объект
-    let currentAudio = null;
+                if (isMuted) {
+                  soundOn.style.display = 'none';
+                  soundOff.style.display = 'block';
+                  audioToggle.classList.add('muted');
+                } else {
+                  soundOn.style.display = 'block';
+                  soundOff.style.display = 'none';
+                  audioToggle.classList.remove('muted');
+                }
+            }
 
-    // Показать плашку "Начать" (для первого запуска)
-    function showStartBanner() {
-      if (isMarkerVisible) {
-        waitingForFirstTap = true;
-        startBanner.classList.add('visible');
-      }
-    }
+              // Load Scene
+              function loadScene(sceneId) {
+                const scene = questData[sceneId];
+                if (!scene) return;
 
-    // Скрыть плашку "Начать"
-    function hideStartBanner() {
-      waitingForFirstTap = false;
-      startBanner.classList.remove('visible');
-    }
+              currentScene = sceneId;
 
-    // Показать плашку "Поймай меня" (только если маркер виден)
-    function showCatchBanner() {
-      if (isMarkerVisible) {
-        canCatch = true;
-        catchBanner.classList.add('visible');
-        shouldShowBannerWhenMarkerVisible = false;
-      } else {
-        // Запоминаем, что нужно показать плашку когда маркер появится
-        shouldShowBannerWhenMarkerVisible = true;
-      }
-    }
+              // Update image with fade
+              questImage.classList.remove('visible');
+              setTimeout(() => {
+                questImage.src = scene.image;
+                questImage.onload = () => {
+                  questImage.classList.add('visible');
+                };
+              }, 300);
 
-    // Скрыть плашку "Поймай меня"
-    function hideCatchBanner() {
-      canCatch = false;
-      catchBanner.classList.remove('visible');
-    }
+              // Reset animations
+              speaker.style.animation = 'none';
+              storyText.style.animation = 'none';
 
-    // Запустить аудио для текущей сцены
-    function playSceneAudio() {
-      const scene = catScenes[currentSceneIndex];
+              // Force reflow
+              speaker.offsetHeight;
+              storyText.offsetHeight;
 
-      // Останавливаем предыдущее аудио если есть
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0; // Сбрасываем позицию для повторного воспроизведения
-        // Убираем старый обработчик ended
-        currentAudio.removeEventListener('ended', onAudioEnded);
-      }
+              // Update content
+              speaker.textContent = scene.speaker;
+              storyText.innerHTML = scene.text;
 
-      isAudioPlaying = true;
-      hideCatchBanner();
-      shouldShowBannerWhenMarkerVisible = false;
+              // Restart animations
+              speaker.style.animation = 'fadeInUp 0.6s ease forwards';
+              storyText.style.animation = 'fadeInUp 0.6s ease 0.2s forwards';
 
-      // Используем предзагруженный аудио элемент
-      currentAudio = document.getElementById(scene.audioId);
+              // Scroll to top
+              contentWrapper.scrollTop = 0;
 
-      if (!currentAudio) {
-        console.warn('Audio element not found:', scene.audioId);
-        isAudioPlaying = false;
-        showCatchBanner();
-        return;
-      }
+              // Render choices
+              renderChoices(scene.choices);
+            }
 
-      // Сбрасываем позицию на начало
-      currentAudio.currentTime = 0;
+              // Render Choices
+              function renderChoices(choices) {
+                choicesContainer.innerHTML = '';
 
-      // Добавляем обработчик окончания
-      currentAudio.addEventListener('ended', onAudioEnded);
+                if (choices.length === 0) return;
 
-      currentAudio.play().catch(function (err) {
-        console.warn('Could not play audio:', err);
-        isAudioPlaying = false;
-        showCatchBanner();
-      });
+              choices.forEach((choice, index) => {
+                const button = document.createElement('button');
 
-      console.log('Playing audio:', scene.audioId);
-    }
+              if (choice.label === '→') {
+                button.className = 'continue-button';
+                button.textContent = choice.text;
+              } else {
+              button.className = 'choice-button';
+              button.innerHTML = `
+                        <span class="choice-label">${choice.label}</span>
+                        ${choice.text}
+                    `;
+            }
 
-    // Обработчик окончания аудио (вынесен отдельно для возможности удаления)
-    function onAudioEnded() {
-      isAudioPlaying = false;
-      showCatchBanner();
-      console.log('Audio ended, catch mode activated!');
-    }
+              button.style.animation = 'none';
+              button.offsetHeight;
+              button.style.animation = `slideUp 0.5s ease ${0.4 + index * 0.1}s forwards`;
 
-    // Функция смены сцены
-    function switchToNextScene() {
-      const box = document.getElementById('box');
-      const currentColor = box.getAttribute('material').color;
-      const newColor = currentColor === 'red' ? 'blue' : 'red';
-      box.setAttribute('material', 'color: ' + newColor);
+              button.addEventListener('click', () => {
+                loadScene(choice.next);
+              });
 
-      const catModel = document.getElementById('cat-model');
-      if (!catModel) return;
+              choicesContainer.appendChild(button);
+            });
+              }
 
-      currentSceneIndex = (currentSceneIndex + 1) % catScenes.length;
-      const scene = catScenes[currentSceneIndex];
-
-      catModel.setAttribute('gltf-model', scene.model);
-      catModel.setAttribute('position', scene.position);
-      catModel.setAttribute('rotation', scene.rotation);
-      catModel.setAttribute('scale', scene.scale);
-
-      console.log('Switched to cat scene:', currentSceneIndex + 1, scene.model);
-
-      // Запускаем аудио для новой сцены
-      playSceneAudio();
-    }
-
-    // Обработка клика/тапа
-    function handleInteraction(e) {
-      // Игнорируем клики если маркер не виден
-      if (!isMarkerVisible) {
-        console.log('Marker not visible, ignoring click');
-        return;
-      }
-
-      // Если ждём первый тап для запуска — запускаем первое аудио
-      if (waitingForFirstTap) {
-        console.log('First tap received, starting audio!');
-        hideStartBanner();
-        hasStartedFirstAudio = true;
-        playSceneAudio();
-        return;
-      }
-
-      // Игнорируем клики пока аудио играет
-      if (isAudioPlaying) {
-        console.log('Audio is playing, ignoring click');
-        return;
-      }
-
-      // Игнорируем если ещё не можем ловить
-      if (!canCatch) {
-        console.log('Catch mode not active yet');
-        return;
-      }
-
-      // Скрываем плашку и переключаем сцену
-      hideCatchBanner();
-      switchToNextScene();
-    }
-
-    // Обработка появления маркера
-    function onMarkerFound() {
-      console.log('Marker found!');
-      isMarkerVisible = true;
-
-      // Если сцена готова и ещё не запускали первое аудио — показываем плашку "Начать"
-      if (isSceneReady && !hasStartedFirstAudio && !waitingForFirstTap) {
-        showStartBanner();
-      }
-
-      // Если ждали первый тап и маркер вернулся — показываем плашку снова
-      if (!hasStartedFirstAudio && waitingForFirstTap) {
-        startBanner.classList.add('visible');
-      }
-
-      // Если нужно показать плашку "Поймай меня" (аудио закончилось пока маркер был скрыт)
-      if (shouldShowBannerWhenMarkerVisible && !isAudioPlaying && hasStartedFirstAudio) {
-        showCatchBanner();
-      }
-    }
-
-    // Обработка потери маркера
-    function onMarkerLost() {
-      console.log('Marker lost!');
-      isMarkerVisible = false;
-
-      // Скрываем плашку "Начать" когда маркер потерян
-      if (waitingForFirstTap) {
-        startBanner.classList.remove('visible');
-      }
-
-      // Скрываем плашку "Поймай меня" когда маркер потерян
-      if (canCatch) {
-        hideCatchBanner();
-        // Запоминаем, что плашку нужно показать когда маркер вернётся
-        shouldShowBannerWhenMarkerVisible = true;
-      }
-    }
-
-    // Онбординг: кнопка "Дальше"
-    onboardingBtn.addEventListener('click', function () {
-      onboardingOverlay.classList.add('hidden');
-
-      // Если сцена уже загружена — сразу скрываем лоадер
-      if (isSceneLoaded) {
-        loadingOverlay.classList.add('hidden');
-        isSceneReady = true;
-        console.log('Scene already loaded, ready!');
-      } else {
-        // Иначе показываем лоадер и ждём загрузки
-        loadingOverlay.classList.remove('hidden');
-      }
-    });
-
-    // Скрыть лоадер когда сцена загружена
-    document.querySelector('a-scene').addEventListener('loaded', function () {
-      console.log('Scene loaded event fired');
-      isSceneLoaded = true;
-
-      // Подписываемся на события маркера
-      const marker = document.querySelector('a-marker');
-      if (marker) {
-        marker.addEventListener('markerFound', onMarkerFound);
-        marker.addEventListener('markerLost', onMarkerLost);
-      }
-
-      // Скрываем лоадер только если онбординг уже пройден
-      // (если онбординг ещё показывается, hidden класс уже стоит на лоадере)
-      setTimeout(() => {
-        loadingOverlay.classList.add('hidden');
-        isSceneReady = true;
-        console.log('Scene ready, waiting for marker...');
-      }, 300);
-    });
-
-    // Клик/тап на экран — переключение сцены (если разрешено)
-    document.addEventListener('DOMContentLoaded', function () {
-      window.addEventListener('click', handleInteraction);
-      window.addEventListener('touchstart', handleInteraction, { passive: true });
-    });
-  </script>
-
+              // Initialize on load
+              document.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
-
 </html>
