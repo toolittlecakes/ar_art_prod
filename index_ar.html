@@ -140,53 +140,6 @@
       }
     }
 
-    /* Плашка "Начать" для первого запуска */
-    #start-banner {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--bg-card);
-      border-top: 1px solid var(--accent);
-      color: var(--accent);
-      text-align: center;
-      padding: 22px 30px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      font-weight: 400;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      z-index: 1000;
-      transform: translateY(100%);
-      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-      cursor: pointer;
-      user-select: none;
-    }
-
-    #start-banner.visible {
-      transform: translateY(0);
-      animation: pulse-start 2s ease-in-out infinite;
-    }
-
-    #start-banner::before {
-      content: '▶';
-      margin-right: 12px;
-      font-size: 0.8rem;
-    }
-
-    @keyframes pulse-start {
-
-      0%,
-      100% {
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-      }
-
-      50% {
-        box-shadow: 0 -4px 35px var(--accent-glow);
-      }
-    }
-
     /* Онбординг экран */
     #onboarding-overlay {
       position: fixed;
@@ -444,9 +397,6 @@
   <!-- Плашка "Поймай меня" -->
   <div id="catch-banner">Поймай меня</div>
 
-  <!-- Плашка "Начать" для первого запуска -->
-  <div id="start-banner">Тапни чтобы начать</div>
-
   <!-- Финальный экран -->
   <div id="final-overlay">
     <div class="final-question">Кто кем управлял?</div>
@@ -505,7 +455,6 @@
     const onboardingBtn = document.getElementById('onboarding-btn');
     const loadingOverlay = document.getElementById('loading-overlay');
     const catchBanner = document.getElementById('catch-banner');
-    const startBanner = document.getElementById('start-banner');
     const finalOverlay = document.getElementById('final-overlay');
     const btnICat = document.getElementById('btn-i-cat');
     const btnCatMe = document.getElementById('btn-cat-me');
@@ -518,7 +467,6 @@
     let isSceneReady = false;
     let isSceneLoaded = false; // Флаг загрузки сцены (для онбординга)
     let hasStartedFirstAudio = false; // Отслеживаем, запустили ли первое аудио
-    let waitingForFirstTap = false; // Ждём первый тап для запуска аудио
     let shouldShowBannerWhenMarkerVisible = false; // Флаг для отложенного показа плашки
 
     // Конфигурация сцен с котами
@@ -537,20 +485,6 @@
 
     // Текущий аудио объект
     let currentAudio = null;
-
-    // Показать плашку "Начать" (для первого запуска)
-    function showStartBanner() {
-      if (isMarkerVisible) {
-        waitingForFirstTap = true;
-        startBanner.classList.add('visible');
-      }
-    }
-
-    // Скрыть плашку "Начать"
-    function hideStartBanner() {
-      waitingForFirstTap = false;
-      startBanner.classList.remove('visible');
-    }
 
     // Показать плашку "Поймай меня" (только если маркер виден)
     function showCatchBanner() {
@@ -635,9 +569,8 @@
         arScene.classList.add('ar-hidden');
       }
 
-      // Скрываем баннеры
+      // Скрываем баннер
       hideCatchBanner();
-      hideStartBanner();
 
       // Останавливаем текущее аудио если есть
       if (currentAudio) {
@@ -705,15 +638,6 @@
         return;
       }
 
-      // Если ждём первый тап для запуска — запускаем первое аудио
-      if (waitingForFirstTap) {
-        console.log('First tap received, starting audio!');
-        hideStartBanner();
-        hasStartedFirstAudio = true;
-        playSceneAudio();
-        return;
-      }
-
       // Игнорируем клики пока аудио играет
       if (isAudioPlaying) {
         console.log('Audio is playing, ignoring click');
@@ -736,14 +660,11 @@
       console.log('Marker found!');
       isMarkerVisible = true;
 
-      // Если сцена готова и ещё не запускали первое аудио — показываем плашку "Начать"
-      if (isSceneReady && !hasStartedFirstAudio && !waitingForFirstTap) {
-        showStartBanner();
-      }
-
-      // Если ждали первый тап и маркер вернулся — показываем плашку снова
-      if (!hasStartedFirstAudio && waitingForFirstTap) {
-        startBanner.classList.add('visible');
+      // Если сцена готова и ещё не запускали первое аудио — сразу запускаем!
+      if (isSceneReady && !hasStartedFirstAudio) {
+        console.log('Auto-starting first audio!');
+        hasStartedFirstAudio = true;
+        playSceneAudio();
       }
 
       // Если нужно показать плашку "Поймай меня" (аудио закончилось пока маркер был скрыт)
@@ -756,11 +677,6 @@
     function onMarkerLost() {
       console.log('Marker lost!');
       isMarkerVisible = false;
-
-      // Скрываем плашку "Начать" когда маркер потерян
-      if (waitingForFirstTap) {
-        startBanner.classList.remove('visible');
-      }
 
       // Скрываем плашку "Поймай меня" когда маркер потерян
       if (canCatch) {
