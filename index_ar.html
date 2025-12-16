@@ -319,33 +319,35 @@
     <a-assets timeout="90000">
 
       <!-- Модели -->
-      <a-asset-item id="lake-asset" src="assets/models/lake.glb"></a-asset-item>
+      <!-- <a-asset-item id="lake-asset" src="assets/models/lake.glb"></a-asset-item> -->
       <a-asset-item id="cat-1-asset" src="assets/models/cat_1.glb"></a-asset-item>
-      <a-asset-item id="cat-2-asset" src="assets/models/cat_2.glb"></a-asset-item>
+      <!-- <a-asset-item id="cat-2-asset" src="assets/models/cat_2.glb"></a-asset-item>
       <a-asset-item id="cat-3-asset" src="assets/models/cat_3.glb"></a-asset-item>
       <a-asset-item id="cat-4-asset" src="assets/models/cat_4.glb"></a-asset-item>
       <a-asset-item id="cat-6-asset" src="assets/models/cat_6.glb"></a-asset-item>
       <a-asset-item id="cat-8-asset" src="assets/models/cat_8.glb"></a-asset-item>
       <a-asset-item id="cat-9-asset" src="assets/models/cat_9.glb"></a-asset-item>
-      <a-asset-item id="cat-10-asset" src="assets/models/cat_10.glb"></a-asset-item>
+      <a-asset-item id="cat-10-asset" src="assets/models/cat_10.glb"></a-asset-item> -->
 
       <!-- Аудио -->
       <audio id="cat-1-audio" src="assets/audios/cat_1.wav" preload="auto"></audio>
       <audio id="cat-2-audio" src="assets/audios/cat_2.wav" preload="auto"></audio>
       <audio id="cat-3-audio" src="assets/audios/cat_3.wav" preload="auto"></audio>
       <audio id="cat-4-audio" src="assets/audios/cat_4.wav" preload="auto"></audio>
+      <audio id="cat-5-audio" src="assets/audios/cat_5.wav" preload="auto"></audio>
       <audio id="cat-6-audio" src="assets/audios/cat_6.wav" preload="auto"></audio>
+      <audio id="cat-7-audio" src="assets/audios/cat_7.wav" preload="auto"></audio>
       <audio id="cat-8-audio" src="assets/audios/cat_8.wav" preload="auto"></audio>
-      <audio id="cat-9-audio" src="assets/audios/cat_9.wav" preload="auto"></audio>
       <audio id="cat-10-audio" src="assets/audios/cat_10.wav" preload="auto"></audio>
     </a-assets>
 
     <a-marker type="pattern" url="assets/markers/hole.patt" smooth="true" smoothCount="5" smoothTolerance=".1">
-      <a-box id="box" position="0 0.5 0" rotation="0 0 0" scale="1 1 1"
-        material="color: red; opacity: 0.5; transparent: true"></a-box>
+      <!-- <a-box id="box" position="0 0.5 0" rotation="0 0 0" scale="1 1 1"
+        material="color: red; opacity: 0.5; transparent: true"></a-box> -->
 
       <!-- Модель кота, которая будет меняться по клику -->
-      <a-entity id="cat-model" gltf-model="#cat-1-asset" scale="1 1 1" position="0 0.5 0" rotation="0 0 0">
+      <!-- <a-entity id="cat-model" gltf-model="#cat-1-asset" scale="1 1 1" position="0 0.5 0" rotation="0 0 0"> -->
+      <a-entity id="cat-model" gltf-model="#cat-1-asset" scale="1 1 1" position="4 3 -4" rotation="180 180 0">
       </a-entity>
     </a-marker>
 
@@ -374,12 +376,13 @@
     // Каждая сцена: модель + позиция + поворот + масштаб + аудио (ID предзагруженного элемента)
     const catScenes = [
       { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-1-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-2-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-3-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-4-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-6-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-8-audio' },
-      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-9-audio' },
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 -45 0', scale: '2 2 2', audioId: 'cat-2-audio' },
+      { model: '#cat-1-asset', position: '-1 -1 0', rotation: '0 0 90', scale: '1 1 1', audioId: 'cat-3-audio' },
+      { model: '#cat-1-asset', position: '4 -2 1', rotation: '-90 0 180', scale: '1 1 1', audioId: 'cat-4-audio' },
+      { model: '#cat-1-asset', position: '4 0.5 0', rotation: '0 -90 0', scale: '1 1 1', audioId: 'cat-5-audio' },
+      { model: '#cat-1-asset', position: '0 7.5 0', rotation: '0 0 0', scale: '15 15 15', audioId: 'cat-6-audio' },
+      { model: '#cat-1-asset', position: '0 0.1 -1', rotation: '0 -45 0', scale: '0.2 0.2 0.2', audioId: 'cat-7-audio' },
+      { model: '#cat-1-asset', position: '4 3 -4', rotation: '180 180 0', scale: '1 1 1', audioId: 'cat-8-audio' },
       { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1', audioId: 'cat-10-audio' },
     ];
 
@@ -468,10 +471,10 @@
 
     // Функция смены сцены
     function switchToNextScene() {
-      const box = document.getElementById('box');
-      const currentColor = box.getAttribute('material').color;
-      const newColor = currentColor === 'red' ? 'blue' : 'red';
-      box.setAttribute('material', 'color: ' + newColor);
+      // const box = document.getElementById('box');
+      // const currentColor = box.getAttribute('material').color;
+      // const newColor = currentColor === 'red' ? 'blue' : 'red';
+      // box.setAttribute('material', 'color: ' + newColor);
 
       const catModel = document.getElementById('cat-model');
       if (!catModel) return;

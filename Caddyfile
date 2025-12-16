@@ -6,6 +6,10 @@
 		rewrite * /index.html
 		file_server
 	}
+  handle /ar {
+		rewrite * /index_ar.html
+		file_server
+	}
 
 	# Serve assets folder
 	handle /assets/* {
