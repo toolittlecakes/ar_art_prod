@@ -11,8 +11,6 @@
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <!-- Use marker-only AR.js (without NFT/location features that may use gyroscope) -->
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <!-- A-Frame Extras for animation-mixer -->
-  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.0/dist/aframe-extras.min.js"></script>
 
   <style>
     body {
@@ -66,7 +64,9 @@
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -77,56 +77,92 @@
   <div id="loading-overlay">
     <div class="loading-content">
       <div class="loading-spinner"></div>
-      <div class="loading-title">Загрузка модели</div>
+      <div class="loading-title">Загрузка моделей</div>
     </div>
   </div>
 
   <!-- A-Frame AR Scene -->
   <a-scene vr-mode-ui="enabled: false;" renderer="logarithmicDepthBuffer: true; precision: medium;" embedded
-    arjs="trackingMethod: artoolkit; sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-    device-orientation-permission-ui="enabled: false">
+    arjs="trackingMethod: artoolkit; sourceType: webcam;" device-orientation-permission-ui="enabled: false">
+
+    <!-- Предзагрузка всех моделей котов -->
+    <a-assets timeout="30000">
+      <a-asset-item id="lake-asset" src="assets/models/lake.glb"></a-asset-item>
+      <a-asset-item id="cat-1-asset" src="assets/models/cat_1.glb"></a-asset-item>
+      <a-asset-item id="cat-2-asset" src="assets/models/cat_2.glb"></a-asset-item>
+      <a-asset-item id="cat-3-asset" src="assets/models/cat_3.glb"></a-asset-item>
+      <a-asset-item id="cat-4-asset" src="assets/models/cat_4.glb"></a-asset-item>
+      <a-asset-item id="cat-6-asset" src="assets/models/cat_6.glb"></a-asset-item>
+      <a-asset-item id="cat-8-asset" src="assets/models/cat_8.glb"></a-asset-item>
+      <a-asset-item id="cat-9-asset" src="assets/models/cat_9.glb"></a-asset-item>
+      <a-asset-item id="cat-10-asset" src="assets/models/cat_10.glb"></a-asset-item>
+    </a-assets>
 
     <a-marker type="pattern" url="assets/markers/hole.patt" smooth="true" smoothCount="5" smoothTolerance=".1">
+      <a-box id="box" position="0 0.5 0" rotation="0 0 0" scale="1 1 1" material="color: red; opacity: 0.5; transparent: true"></a-box>
 
-      <a-entity id="lake-model" gltf-model="assets/models/lake.glb" animation-mixer position="0 0 0" scale="2 2 2" rotation="0 0 0" shadow="cast: false; receive: false"></a-entity>
-
-      <a-entity id="cat-1" gltf-model="assets/models/cat_1.glb" animation-mixer position="0 -0.5 0" scale="1 1 1" rotation="0 0 0" shadow="cast: false; receive: false" visible="true"></a-entity>
-
-      <!-- </a-nft> -->
+      <!-- Модель кота, которая будет меняться по клику -->
+      <a-entity id="cat-model" gltf-model="#cat-1-asset" scale="1 1 1" position="0 0.5 0" rotation="0 0 0">
+      </a-entity>
     </a-marker>
 
-    <!-- Camera entity - no look-controls to prevent gyroscope usage -->
-    <a-entity camera>
-      <a-entity cursor="fuse: false; rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
-    </a-entity>
+    <a-entity camera></a-entity>
   </a-scene>
 
   <script>
     const overlay = document.getElementById('loading-overlay');
-    let catActivated = false; // Флаг: кот уже появился
 
-    // Hide loading when model is loaded
-    THREE.DefaultLoadingManager.onLoad = function() {
+    // Скрыть лоадер когда сцена загружена
+    document.querySelector('a-scene').addEventListener('loaded', function () {
       setTimeout(() => {
         overlay.classList.add('hidden');
       }, 300);
-    };
-
-    // Backup: listen for model-loaded event
-    document.addEventListener('DOMContentLoaded', function() {
-      const lakeModel = document.getElementById('lake-model');
-      const catModel = document.getElementById('cat-1');
-
-      if (lakeModel) {
-        lakeModel.addEventListener('model-loaded', function() {
-          setTimeout(() => {
-            overlay.classList.add('hidden');
-          }, 300);
-        });
-      }
-
     });
 
+    // Конфигурация сцен с котами
+    // Каждая сцена: модель + позиция + поворот + масштаб
+    const catScenes = [
+      { model: '#cat-1-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1' },
+      { model: '#cat-2-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1' },
+      { model: '#cat-3-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1' },
+      { model: '#cat-4-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1' },
+      { model: '#cat-6-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1' },
+      { model: '#cat-8-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1' },
+      { model: '#cat-9-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1' },
+      { model: '#cat-10-asset', position: '0 0.5 0', rotation: '0 0 0', scale: '1 1 1' },
+    ];
+
+    let currentSceneIndex = 0;
+
+    // Функция смены сцены
+    function switchToNextScene() {
+      const box = document.getElementById('box');
+      const currentColor = box.getAttribute('material').color;
+      const newColor = currentColor === 'red' ? 'blue' : 'red';
+      box.setAttribute('material', 'color: ' + newColor);
+
+      const catModel = document.getElementById('cat-model');
+      if (!catModel) return;
+
+      currentSceneIndex = (currentSceneIndex + 1) % catScenes.length;
+      const scene = catScenes[currentSceneIndex];
+
+      catModel.setAttribute('gltf-model', scene.model);
+      catModel.setAttribute('position', scene.position);
+      catModel.setAttribute('rotation', scene.rotation);
+      catModel.setAttribute('scale', scene.scale);
+
+      console.log('Switched to cat scene:', currentSceneIndex + 1, scene.model);
+    }
+
+    // Клик/тап на экран — переключение сцены
+    document.addEventListener('DOMContentLoaded', function () {
+      // Любой клик на экран меняет сцену
+      window.addEventListener('click', switchToNextScene);
+
+      // Также поддержка touch для мобильных
+      window.addEventListener('touchstart', switchToNextScene, { passive: true });
+    });
   </script>
 
 </body>

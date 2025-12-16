@@ -1,0 +1,12 @@
+{
+  "name": "ar_art_prod",
+  "type": "module",
+  "scripts": {
+    "normalize-models": "node normalize-models.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.2.1",
+    "@gltf-transform/functions": "^4.2.1",
+    "gl-matrix": "^3.4.3"
+  }
+}
