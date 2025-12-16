@@ -6,7 +6,7 @@
 		rewrite * /index.html
 		file_server
 	}
-  handle /ar {
+  handle /index_ar.html {
 		rewrite * /index_ar.html
 		file_server
 	}

@@ -418,7 +418,10 @@
     <!-- Start Screen -->
     <div id="start-screen">
       <h1 class="start-title">Алиса</h1>
-      <button class="start-button" id="start-button">Начать</button>
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <button class="start-button" id="cat-button">Поиграть с котом</button>
+        <button class="start-button" id="alice-button">Поговорить с Алисой</button>
+      </div>
     </div>
 
     <!-- Audio Control -->
@@ -559,8 +562,7 @@
               let isMuted = false;
 
               // DOM Elements
-              const startScreen = document.getElementById('start-screen');
-              const startButton = document.getElementById('start-button');
+                const startScreen = document.getElementById('start-screen');
               const gameContainer = document.getElementById('game-container');
               const questImage = document.getElementById('quest-image');
               const speaker = document.getElementById('speaker');
@@ -572,9 +574,16 @@
               const soundOff = document.getElementById('sound-off');
               const contentWrapper = document.getElementById('content-wrapper');
 
+                // DOM Elements for buttons
+                const catButton = document.getElementById('cat-button');
+                const aliceButton = document.getElementById('alice-button');
+
               // Initialize
               function init() {
-                startButton.addEventListener('click', startGame);
+                catButton.addEventListener('click', () => {
+                  window.location.href = 'index_ar.html';
+                });
+                aliceButton.addEventListener('click', startGame);
                 audioToggle.addEventListener('click', toggleAudio);
               }
 

@@ -625,14 +625,8 @@
         finalAudio.pause();
       }
 
-      // Закрываем окно/вкладку
-      window.close();
-
-      // Если окно не закрылось (некоторые браузеры блокируют window.close())
-      // перенаправляем на пустую страницу или показываем сообщение
-      setTimeout(() => {
-        document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;background:#0d0d0d;color:white;font-family:sans-serif;text-align:center;padding:20px;"><div><h2>Спасибо за участие!</h2><p style="opacity:0.7;">Можете закрыть эту вкладку</p></div></div>';
-      }, 100);
+      // Редирект на главную страницу
+      window.location.href = '/';
     }
 
     // Функция смены сцены
