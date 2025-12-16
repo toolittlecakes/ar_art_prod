@@ -588,11 +588,22 @@
                 const catButton = document.getElementById('cat-button');
                 const aliceButton = document.getElementById('alice-button');
 
+                // Check if device is iPhone
+                function isIPhone() {
+                  return /iPhone/i.test(navigator.userAgent);
+                }
+
               // Initialize
               function init() {
-                catButton.addEventListener('click', () => {
-                  window.location.href = 'index_ar.html';
-                });
+                // Show cat button only on iPhones
+                if (isIPhone()) {
+                  catButton.addEventListener('click', () => {
+                    window.location.href = 'index_ar.html';
+                  });
+                } else {
+                  catButton.style.display = 'none';
+                }
+
                 aliceButton.addEventListener('click', startGame);
                 audioToggle.addEventListener('click', toggleAudio);
               }
